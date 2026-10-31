@@ -1,0 +1,60 @@
+# Dependencies and build output (including the example applications).
+vendor/
+node_modules/
+target/
+*.so
+*.dylib
+*.dll
+*.exe
+/pdf-concater
+
+# Generated benchmark inputs, merged documents and temporary files.
+/data/
+/data-*/
+/output/
+/tmp/
+*.[pP][dD][fF]
+!**/tests/Fixtures/**/*.[pP][dD][fF]
+!**/tests/fixtures/**/*.[pP][dD][fF]
+
+# Local configuration and credentials. Keep the shareable environment template.
+.env
+.env.*
+!.env.example
+auth.json
+
+# Runtime, test and language caches.
+*.log
+*.sqlite
+*.sqlite-*
+__pycache__/
+*.py[cod]
+.phpunit.cache/
+.phpunit.result.cache
+.php-cs-fixer.cache
+.phpactor.json
+.cache/
+coverage/
+
+# Operating system, editor and local assistant files.
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.zed/
+.nova/
+.cursor/
+.codex/
+.claude/
+.agents/
+
+# Generated Laravel Boost setup is local development metadata.
+/examples/laravel-app/AGENTS.md
+/examples/laravel-app/CLAUDE.md
+/examples/laravel-app/boost.json
+
+# Keep Cargo.lock, composer.lock, Laravel .gitignore placeholders and PDF test fixtures.
+

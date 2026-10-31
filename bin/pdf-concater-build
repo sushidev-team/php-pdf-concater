@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+// The consumer explicitly runs this once after Composer installation.
+$root = dirname(__DIR__);
+$command = ['cargo', 'build', '--release', '--locked', '--manifest-path', $root . '/Cargo.toml',
+    '--target-dir', $root . '/target', '-p', 'pdf-concater'];
+if (!function_exists('proc_open')) {
+    fwrite(STDERR, "proc_open is required to build the Rust executable.\n");
+    exit(1);
+}
+$process = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, $root, null, ['bypass_shell' => true]);
+if (!is_resource($process)) {
+    fwrite(STDERR, "Cannot start Cargo. Install Rust and ensure cargo is on PATH.\n");
+    exit(1);
+}
+$status = proc_close($process);
+if ($status === 0) {
+    echo 'Rust executable ready: ' . $root . "/target/release/pdf-concater\n";
+}
+exit($status);

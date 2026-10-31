@@ -1,0 +1,30 @@
+{
+    "name": "sushidev/pdf-concater-example",
+    "description": "Minimal application using the local PDF Concater Composer package.",
+    "type": "project",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../..",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "sushidev/php-pdf-concater": "dev-main"
+                }
+            }
+        },
+        {
+            "packagist.org": false
+        }
+    ],
+    "require": {
+        "sushidev/php-pdf-concater": "dev-main"
+    },
+    "authors": [
+        {
+            "name": "Sushi Dev GmbH",
+            "homepage": "https://sushi.dev"
+        }
+    ]
+}

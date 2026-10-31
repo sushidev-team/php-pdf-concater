@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+require $_composer_autoload_path ?? dirname(__DIR__) . '/vendor/autoload.php';
+
+use SushiDev\PdfConcater\Merger;
+
+if ($argc !== 3 || in_array($argv[1] ?? '', ['-h', '--help'], true)) {
+    fwrite($argc === 2 ? STDOUT : STDERR, "Usage: pdf-concater INPUT_DIRECTORY OUTPUT.pdf\n");
+    exit($argc === 2 && in_array($argv[1], ['-h', '--help'], true) ? 0 : 1);
+}
+
+try {
+    $result = (new Merger())->mergeDirectory($argv[1], $argv[2]);
+    echo json_encode($result, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), "\n";
+} catch (Throwable $error) {
+    fwrite(STDERR, $error->getMessage() . "\n");
+    exit(1);
+}

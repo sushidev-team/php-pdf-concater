@@ -1,0 +1,86 @@
+{
+    "name": "sushidev/php-pdf-concater",
+    "description": "Merge PDFs from PHP with a fast Rust engine.",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/sushidev-team/php-pdf-concater",
+    "support": {
+        "source": "https://github.com/sushidev-team/php-pdf-concater",
+        "issues": "https://github.com/sushidev-team/php-pdf-concater/issues"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "composer-runtime-api": "^2.2"
+    },
+    "suggest": {
+        "ext-pdf_concater": "Optional native PHP backend; otherwise the Rust executable is used.",
+        "illuminate/support": "Optional Laravel integration, tested with Laravel 12 and 13."
+    },
+    "autoload": {
+        "psr-4": {
+            "SushiDev\\PdfConcater\\": "php/src/"
+        }
+    },
+    "bin": [
+        "bin/pdf-concater",
+        "bin/pdf-concater-build"
+    ],
+    "scripts": {
+        "build": "@php bin/pdf-concater-build",
+        "test": [
+            "@php vendor/bin/phpunit",
+            "@php php/tests/library.php"
+        ],
+        "test:coverage": "@php scripts/run-coverage.php",
+        "test:coverage:library": "@php scripts/run-coverage.php library",
+        "test:coverage:laravel": "@php scripts/run-coverage.php laravel"
+    },
+    "archive": {
+        "exclude": [
+            "/data",
+            "/data-*",
+            "/output",
+            "/tmp",
+            "/target",
+            "/vendor",
+            "/examples",
+            "/.DS_Store",
+            "/.env",
+            "/.env.*",
+            "!/.env.example",
+            "/auth.json",
+            "/.agents",
+            "/.claude",
+            "/.codex",
+            "/.idea",
+            "/.vscode",
+            "/.cache",
+            "/coverage",
+            "/.phpunit.cache",
+            "/.github"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "orchestra/testbench": "^10.0"
+    },
+    "authors": [
+        {
+            "name": "Sushi Dev GmbH",
+            "homepage": "https://sushi.dev"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SushiDev\\PdfConcater\\PdfConcaterServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        }
+    }
+}

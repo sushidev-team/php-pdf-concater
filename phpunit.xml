@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="php/tests/bootstrap.php"
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnRisky="true"
+         failOnPhpunitDeprecation="true"
+         colors="true">
+    <testsuites>
+        <testsuite name="PHP library">
+            <directory suffix="Test.php">php/tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Laravel package integration">
+            <directory suffix="Test.php">php/tests/Laravel</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include><directory suffix=".php">php/src</directory></include>
+    </source>
+    <coverage includeUncoveredFiles="true" disableCodeCoverageIgnore="true"/>
+</phpunit>

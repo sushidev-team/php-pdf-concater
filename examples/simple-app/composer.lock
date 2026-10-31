@@ -1,0 +1,122 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "6158793587f4032382c6bfe74c34c344",
+    "packages": [
+        {
+            "name": "sushidev/php-pdf-concater",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../..",
+                "reference": "a996ebfde24696c0d1a5b5d735f026154dd75d33"
+            },
+            "require": {
+                "composer-runtime-api": "^2.2",
+                "ext-json": "*",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0",
+                "phpunit/phpunit": "^11.5"
+            },
+            "suggest": {
+                "ext-pdf_concater": "Optional native PHP backend; otherwise the Rust executable is used.",
+                "illuminate/support": "Optional Laravel integration, tested with Laravel 12 and 13."
+            },
+            "bin": [
+                "bin/pdf-concater",
+                "bin/pdf-concater-build"
+            ],
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SushiDev\\PdfConcater\\PdfConcaterServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SushiDev\\PdfConcater\\": "php/src/"
+                }
+            },
+            "archive": {
+                "exclude": [
+                    "/data",
+                    "/data-*",
+                    "/output",
+                    "/tmp",
+                    "/target",
+                    "/vendor",
+                    "/examples",
+                    "/.DS_Store",
+                    "/.env",
+                    "/.env.*",
+                    "!/.env.example",
+                    "/auth.json",
+                    "/.agents",
+                    "/.claude",
+                    "/.codex",
+                    "/.idea",
+                    "/.vscode",
+                    "/.cache",
+                    "/coverage",
+                    "/.phpunit.cache",
+                    "/.github"
+                ]
+            },
+            "scripts": {
+                "build": [
+                    "@php bin/pdf-concater-build"
+                ],
+                "test": [
+                    "@php vendor/bin/phpunit",
+                    "@php php/tests/library.php"
+                ],
+                "test:coverage": [
+                    "@php scripts/run-coverage.php"
+                ],
+                "test:coverage:library": [
+                    "@php scripts/run-coverage.php library"
+                ],
+                "test:coverage:laravel": [
+                    "@php scripts/run-coverage.php laravel"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sushi Dev GmbH",
+                    "homepage": "https://sushi.dev"
+                }
+            ],
+            "description": "Merge PDFs from PHP with a fast Rust engine.",
+            "homepage": "https://github.com/sushidev-team/php-pdf-concater",
+            "support": {
+                "source": "https://github.com/sushidev-team/php-pdf-concater",
+                "issues": "https://github.com/sushidev-team/php-pdf-concater/issues"
+            },
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "sushidev/php-pdf-concater": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

@@ -1,0 +1,17 @@
+[package]
+name = "php-pdf-concater"
+version = "0.1.0"
+license = "MIT"
+authors = ["Sushi Dev GmbH"]
+homepage = "https://sushi.dev"
+repository = "https://github.com/sushidev-team/php-pdf-concater"
+edition = "2024"
+
+[lib]
+name = "pdf_concater"
+crate-type = ["cdylib"]
+
+[dependencies]
+ext-php-rs = "=0.16.3"
+pdf-concater = { path = ".." }
+

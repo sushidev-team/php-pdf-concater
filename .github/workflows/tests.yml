@@ -1,0 +1,89 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust tests and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets --locked -p pdf-concater -- -D warnings
+      - run: cargo test --release --locked -p pdf-concater
+
+  php:
+    name: PHP ${{ matrix.php }} on ${{ matrix.os }} — 100% coverage
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, php: '8.2' }
+          - { os: ubuntu-latest, php: '8.5' }
+          - { os: macos-latest, php: '8.5' }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, fileinfo, mbstring, pdo_sqlite, xml, xmlwriter
+          coverage: pcov
+          tools: composer:v2
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install native extension build dependency
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: composer validate --strict
+      - run: composer build
+      - run: cargo build --release --locked -p php-pdf-concater
+      - run: composer test
+      - run: composer test:coverage:library
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: php-coverage-${{ matrix.os }}-${{ matrix.php }}
+          path: coverage/library/
+          if-no-files-found: error
+
+  laravel:
+    name: Laravel — 100% coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: dom, fileinfo, mbstring, pdo_sqlite, xml, xmlwriter
+          coverage: pcov
+          tools: composer:v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: composer install --prefer-dist --no-interaction --no-progress
+        working-directory: examples/laravel-app
+      - run: cp .env.example .env
+        working-directory: examples/laravel-app
+      - run: php artisan key:generate --no-interaction
+        working-directory: examples/laravel-app
+      - run: composer build
+        working-directory: examples/laravel-app
+      - run: php scripts/run-coverage.php laravel
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: laravel-coverage
+          path: coverage/laravel/
+          if-no-files-found: error
