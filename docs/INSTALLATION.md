@@ -16,12 +16,12 @@ Before the first GitHub push, add a local path repository to your PHP applicatio
             "type": "path",
             "url": "/absolute/path/to/php-pdf-concater",
             "options": {
-                "versions": {"sushidev/php-pdf-concater": "dev-main"}
+                "versions": {"sushidev/php-pdf-concater": "dev-master"}
             }
         }
     ],
     "require": {
-        "sushidev/php-pdf-concater": "dev-main"
+        "sushidev/php-pdf-concater": "dev-master"
     }
 }
 ```
@@ -39,11 +39,11 @@ explains local package development.
 
 ## GitHub installation
 
-After the repository's `main` branch is published:
+After the repository's `master` branch is published:
 
 ```sh
 composer config repositories.pdf-concater vcs https://github.com/sushidev-team/php-pdf-concater
-composer require sushidev/php-pdf-concater:dev-main
+composer require sushidev/php-pdf-concater:dev-master
 vendor/bin/pdf-concater-build
 ```
 

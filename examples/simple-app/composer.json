@@ -10,7 +10,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "sushidev/php-pdf-concater": "dev-main"
+                    "sushidev/php-pdf-concater": "dev-master"
                 }
             }
         },
@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "sushidev/php-pdf-concater": "dev-main"
+        "sushidev/php-pdf-concater": "dev-master"
     },
     "authors": [
         {

@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6158793587f4032382c6bfe74c34c344",
+    "content-hash": "5ded6c792e4bd70a91e6569a96be0cda",
     "packages": [
         {
             "name": "sushidev/php-pdf-concater",
-            "version": "dev-main",
+            "version": "dev-master",
             "dist": {
                 "type": "path",
                 "url": "../..",
-                "reference": "a996ebfde24696c0d1a5b5d735f026154dd75d33"
+                "reference": "64a097d0a584153eef56b60cf78589ca79443aa5"
             },
             "require": {
                 "composer-runtime-api": "^2.2",
@@ -20,6 +20,7 @@
                 "php": "^8.2"
             },
             "require-dev": {
+                "league/flysystem-aws-s3-v3": "^3.0",
                 "orchestra/testbench": "^10.0",
                 "phpunit/phpunit": "^11.5"
             },

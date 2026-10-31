@@ -12,7 +12,7 @@
         "php": "^8.3",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "sushidev/php-pdf-concater": "dev-main"
+        "sushidev/php-pdf-concater": "dev-master"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -94,7 +94,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "sushidev/php-pdf-concater": "dev-main"
+                    "sushidev/php-pdf-concater": "dev-master"
                 }
             }
         }

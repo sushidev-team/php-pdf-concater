@@ -53,11 +53,11 @@ Lossless compression is enabled by default. Errors throw
 
 ## Install in an existing application
 
-Once the code has been published to the repository's `main` branch:
+Once the code has been published to the repository's `master` branch:
 
 ```sh
 composer config repositories.pdf-concater vcs https://github.com/sushidev-team/php-pdf-concater
-composer require sushidev/php-pdf-concater:dev-main
+composer require sushidev/php-pdf-concater:dev-master
 vendor/bin/pdf-concater-build
 ```
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "89fa1eb275694316444fbcd77c81cf60",
+    "content-hash": "c00ab950799b7d160f39e45f947ca1f6",
     "packages": [
         {
             "name": "brick/math",
@@ -3273,11 +3273,11 @@
         },
         {
             "name": "sushidev/php-pdf-concater",
-            "version": "dev-main",
+            "version": "dev-master",
             "dist": {
                 "type": "path",
                 "url": "../..",
-                "reference": "a996ebfde24696c0d1a5b5d735f026154dd75d33"
+                "reference": "64a097d0a584153eef56b60cf78589ca79443aa5"
             },
             "require": {
                 "composer-runtime-api": "^2.2",
@@ -3285,6 +3285,7 @@
                 "php": "^8.2"
             },
             "require-dev": {
+                "league/flysystem-aws-s3-v3": "^3.0",
                 "orchestra/testbench": "^10.0",
                 "phpunit/phpunit": "^11.5"
             },
