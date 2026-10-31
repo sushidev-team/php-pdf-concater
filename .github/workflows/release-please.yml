@@ -21,18 +21,55 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      release_created: ${{ steps.release_please.outputs.release_created }}
+      tag_name: ${{ steps.release_please.outputs.tag_name }}
+      prs_created: ${{ steps.release_please.outputs.prs_created }}
+      prs: ${{ steps.release_please.outputs.prs }}
     steps:
-      - name: Check release token configuration
-        env:
-          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-        run: |
-          if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
-            echo "::error::Add the RELEASE_PLEASE_TOKEN repository secret with Contents, Pull requests and Issues read/write permissions."
-            exit 1
-          fi
       - uses: googleapis/release-please-action@v5
+        id: release_please
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ github.token }}
           target-branch: master
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  release-pr-checks:
+    name: Start release PR tests
+    needs: release
+    if: needs.release.outputs.prs_created == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_PRS: ${{ needs.release.outputs.prs }}
+    steps:
+      - name: Dispatch checks on the updated release PR branches
+        shell: bash
+        run: |
+          branches="$(jq -er '
+            if type != "array" or length == 0 then error("Missing release PRs") else
+              .[] | .headBranchName |
+              if type == "string" and length > 0 then . else error("Missing release PR branch") end
+            end
+          ' <<< "$RELEASE_PRS")"
+          while IFS= read -r branch; do
+            git check-ref-format --branch "$branch" > /dev/null
+            gh workflow run tests.yml --ref "$branch" --repo "$GH_REPO"
+            gh workflow run pdf-corpus.yml --ref "$branch" --repo "$GH_REPO" -f count=100 -f runs=3
+            gh workflow run storage.yml --ref "$branch" --repo "$GH_REPO"
+          done <<< "$branches"
+
+  binaries:
+    name: Attach binaries to the new release
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-binaries.yml
+    with:
+      tag: ${{ needs.release.outputs.tag_name }}
