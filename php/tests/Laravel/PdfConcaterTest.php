@@ -6,6 +6,7 @@ namespace SushiDev\PdfConcater\Tests\Laravel;
 
 use Orchestra\Testbench\TestCase;
 use SushiDev\PdfConcater\Facades\PdfConcater;
+use SushiDev\PdfConcater\Laravel\PdfConcater as Service;
 use SushiDev\PdfConcater\Merger;
 use SushiDev\PdfConcater\PdfConcaterServiceProvider;
 
@@ -21,7 +22,8 @@ final class PdfConcaterTest extends TestCase
         $service = $this->app->make(Merger::class);
 
         self::assertSame($service, $this->app->make(Merger::class));
-        self::assertSame($service, PdfConcater::getFacadeRoot());
+        self::assertSame($this->app->make(Service::class), PdfConcater::getFacadeRoot());
+        self::assertSame($service->backend(), PdfConcater::backend());
         self::assertSame(8, config('pdf-concater.threads'));
         self::assertSame(32, config('pdf-concater.batch_size'));
         self::assertTrue(config('pdf-concater.compress'));

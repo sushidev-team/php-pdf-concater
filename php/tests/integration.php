@@ -71,6 +71,8 @@ try {
     check($second < $first, 'Explicit list order lost');
 
     expectFailure(fn() => pdf_concater_merge_files([], $output), 'must not be empty');
+    expectFailure(fn() => pdf_concater_merge_files($list, $output, threads: 0), 'must be positive');
+    expectFailure(fn() => pdf_concater_merge_files($list, $output, engine: 'invalid'), 'engine must');
     expectFailure(fn() => pdf_concater_merge_dir($input, $output, threads: 0), 'must be positive');
     expectFailure(fn() => pdf_concater_merge_dir($input, $output, batch_size: -1), 'must be positive');
     expectFailure(fn() => pdf_concater_merge_dir($input, $output, engine: 'invalid'), 'engine must');
@@ -80,6 +82,7 @@ try {
     expectFailure(fn() => pdf_concater_merge_files([$input . '/001.pdf'], $input . '/001.pdf'), 'overwrite an input');
     expectFailure(fn() => pdf_concater_merge_files([['invalid']], $output), 'files');
     expectFailure(fn() => pdf_concater_merge_files(["bad\0path"], $output), 'null bytes');
+    expectFailure(fn() => pdf_concater_merge_dir("bad\0path", $output), 'null bytes');
     $before = hash_file('sha256', $output);
     file_put_contents($root . '/bad.pdf', 'not a PDF');
     expectFailure(fn() => pdf_concater_merge_files([$root . '/bad.pdf'], $output), 'PDF merge failed');
@@ -88,6 +91,7 @@ try {
     check(pdf_concater_merge_dir($input, $output, 1)['pages'] === 2, 'Merge after failure did not recover');
     ini_set('open_basedir', $root);
     expectFailure(fn() => @pdf_concater_merge_dir(dirname($root), $output), 'open_basedir');
+    expectFailure(fn() => @pdf_concater_merge_files([dirname($root).'/outside.pdf'], $output), 'open_basedir');
     echo "PHP integration tests passed: native defaults, ordered lists, repeated sources, paths with spaces, errors, output preservation, recovery and open_basedir.\n";
 } finally {
     foreach (glob($input . '/*') ?: [] as $path) {

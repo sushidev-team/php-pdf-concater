@@ -81,7 +81,7 @@ the executable backend. No PHP extension is needed for normal use.
 
 Laravel discovers `PdfConcaterServiceProvider` from the package's Composer
 metadata. No manual provider registration or application service binding is needed.
-The same `Merger` instance is used by dependency injection and the facade.
+The facade resolves `SushiDev\PdfConcater\Laravel\PdfConcater` from the container.
 
 ```php
 use SushiDev\PdfConcater\Facades\PdfConcater;
@@ -93,11 +93,11 @@ $result = PdfConcater::mergeDirectory($directory, storage_path('app/merged.pdf')
 For dependency injection into your own service:
 
 ```php
-use SushiDev\PdfConcater\Merger;
+use SushiDev\PdfConcater\Laravel\PdfConcater;
 
 final class CreateCombinedPdf
 {
-    public function __construct(private Merger $pdfs) {}
+    public function __construct(private PdfConcater $pdfs) {}
 
     public function handle(array $files, string $output): array
     {
@@ -109,6 +109,9 @@ final class CreateCombinedPdf
 Resolve your service through Laravel's container, for example by injecting it into
 a controller. Facade results, exceptions and filename ordering are the same as
 the plain PHP API.
+
+Use `mergeFromDisk` for Laravel Storage sources and a destination disk. See
+[Storage disks and streaming](STORAGE.md) for S3 setup and performance details.
 
 To publish `config/pdf-concater.php`:
 

@@ -9,6 +9,14 @@ use std::{
     time::Instant,
 };
 mod streaming;
+// Shared with the native extension; no Zend runtime dependency in this helper.
+#[doc(hidden)]
+pub mod boundary;
+
+#[cfg(test)]
+mod error_tests;
+#[cfg(test)]
+mod merge_tests;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Engine {

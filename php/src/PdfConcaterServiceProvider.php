@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace SushiDev\PdfConcater;
 
+use Illuminate\Contracts\Filesystem\Factory;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use SushiDev\PdfConcater\Laravel\PdfConcater;
 
 final class PdfConcaterServiceProvider extends ServiceProvider
 {
@@ -21,6 +23,13 @@ final class PdfConcaterServiceProvider extends ServiceProvider
                 threads: (int) $config->get('pdf-concater.threads', 8),
                 batchSize: (int) $config->get('pdf-concater.batch_size', 32),
                 compress: (bool) $config->get('pdf-concater.compress', true),
+            );
+        });
+        $this->app->singleton(PdfConcater::class, static function (Application $app): PdfConcater {
+            return new PdfConcater(
+                $app->make(Merger::class),
+                $app->make(Factory::class),
+                $app['config']->get('pdf-concater.temporary_directory'),
             );
         });
     }

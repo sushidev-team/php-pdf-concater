@@ -11,13 +11,17 @@ use std::{
     time::Instant,
 };
 
-struct PdfWriter<W: Write> {
-    output: W,
+#[cfg(test)]
+#[path = "streaming_tests.rs"]
+mod tests;
+
+struct PdfWriter<'a> {
+    output: &'a mut dyn Write,
     position: u64,
     offsets: Vec<Option<(u64, u16)>>,
 }
 
-impl<W: Write> Write for PdfWriter<W> {
+impl Write for PdfWriter<'_> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         let size = self.output.write(bytes)?;
         self.position += size as u64;
@@ -33,7 +37,7 @@ impl<W: Write> Write for PdfWriter<W> {
     }
 }
 
-impl<W: Write> PdfWriter<W> {
+impl PdfWriter<'_> {
     fn indirect(&mut self, id: ObjectId, object: &Object) -> Result<()> {
         let index = id.0 as usize;
         if self.offsets.len() <= index {
@@ -161,6 +165,12 @@ struct Prepared {
     input_bytes: u64,
 }
 
+fn join_producer(producer: std::thread::ScopedJoinHandle<'_, Result<()>>) -> Result<()> {
+    producer
+        .join()
+        .map_err(|_| anyhow::anyhow!("PDF producer thread panicked"))?
+}
+
 fn prepare(
     mut doc: Document,
     input_bytes: u64,
@@ -233,8 +243,34 @@ pub(crate) fn merge(
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or(Path::new("."));
     let mut temporary = tempfile::NamedTempFile::new_in(parent)?;
+    let mut metrics = merge_into(
+        paths,
+        &mut BufWriter::with_capacity(1024 * 1024, temporary.as_file_mut()),
+        threads,
+        batch_size,
+        started,
+        compress,
+    )?;
+    let publish_started = Instant::now();
+    temporary.as_file().sync_all()?;
+    temporary.persist(output).map_err(|error| error.error)?;
+    metrics.write_sync_ms += publish_started.elapsed().as_secs_f64() * 1000.0;
+    metrics.total_ms = started.elapsed().as_secs_f64() * 1000.0;
+    Ok(metrics)
+}
+
+// Keeping serialization independent of the filesystem also lets tests exercise
+// short writes, disk-full errors and producer cancellation deterministically.
+fn merge_into(
+    paths: &[PathBuf],
+    output: &mut dyn Write,
+    threads: usize,
+    batch_size: usize,
+    started: Instant,
+    compress: bool,
+) -> Result<Metrics> {
     let mut writer = PdfWriter {
-        output: BufWriter::with_capacity(1024 * 1024, temporary.as_file_mut()),
+        output,
         position: 0,
         offsets: Vec::new(),
     };
@@ -327,9 +363,7 @@ pub(crate) fn merge(
                 stream_write_ms += write_started.elapsed().as_secs_f64() * 1000.0;
             }
         }
-        producer
-            .join()
-            .map_err(|_| anyhow::anyhow!("PDF producer thread panicked"))??;
+        join_producer(producer)?;
         Ok(())
     })?;
     let load_import_ms = load_started.elapsed().as_secs_f64() * 1000.0 - stream_write_ms;
@@ -345,9 +379,6 @@ pub(crate) fn merge(
     )?;
     writer.finish(catalog.0, catalog)?;
     let output_bytes = writer.position;
-    drop(writer);
-    temporary.as_file().sync_all()?;
-    temporary.persist(output).map_err(|error| error.error)?;
     let write_sync_ms = write_started.elapsed().as_secs_f64() * 1000.0;
     Ok(Metrics {
         engine: if compress {

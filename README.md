@@ -4,7 +4,7 @@ Merge PDFs from PHP or Laravel with a fast Rust engine.
 
 ## Requirements
 
-PHP 8.2+, Composer 2.2+, and a current Rust toolchain for the initial build.
+PHP 8.2+, Composer 2.2+, and either a prebuilt executable or Rust for the initial build.
 The executable backend uses PHP's `proc_open`. Build for the OS and architecture
 running PHP; Linux and macOS are supported.
 
@@ -22,8 +22,8 @@ This creates a two-page PDF from the included test fixtures. Replace
 `php/tests/Fixtures` with your own PDF directory. Keep the output outside that directory.
 
 `composer build` compiles the Rust executable once. It does not install a PHP
-extension or change PHP configuration. A compatible prebuilt executable can be
-copied to production; Rust is only needed when building.
+extension or change PHP configuration. A [prebuilt executable](docs/BINARIES.md)
+can be copied to production; Rust is only needed when building.
 
 ## Use in PHP
 
@@ -75,8 +75,24 @@ use SushiDev\PdfConcater\Facades\PdfConcater;
 $result = PdfConcater::merge($files, storage_path('app/merged.pdf'));
 ```
 
-Or inject `SushiDev\PdfConcater\Merger` into your controller, job or service.
-Both resolve the same configured service from Laravel's container.
+Inject `SushiDev\PdfConcater\Laravel\PdfConcater` into a controller, job or service
+to use the same service as the facade.
+
+Read PDFs from a Laravel Storage disk and choose the destination disk:
+
+```php
+$result = PdfConcater::mergeFromDisk(
+    ['invoices/first.pdf', 'invoices/second.pdf'],
+    'exports/combined.pdf',
+    disk: 's3',
+    outputDisk: 'archive',
+);
+```
+
+Local disks use direct file paths. Remote disks use streamed downloads and uploads
+with temporary files, keeping document contents out of the PHP heap.
+See [Storage disks and streaming](docs/STORAGE.md) for configuration, downloads
+and performance metrics.
 
 Publish the optional configuration:
 
@@ -116,9 +132,9 @@ composer test
 ```
 
 The GitHub Actions workflow runs PHP, Laravel and Rust tests on pushes and pull
-requests. Its coverage gate requires **100% executable-line coverage** of
-`php/src/` and `examples/laravel-app/app/`, including failure paths and the optional
-native PHP backend. Reports and caches are ignored by Git.
+requests. Its coverage gates require **100% executable-line coverage** of the PHP
+classes, Laravel example application and runtime Rust sources, including the CLI
+and native PHP boundary. Reports and caches are ignored by Git.
 
 See [testing and coverage](docs/TESTING.md) for the full local coverage command,
 requirements, scope and CI checks.
@@ -128,6 +144,7 @@ requirements, scope and CI checks.
 ```sh
 make benchmark           # 10,000 small PDFs
 make benchmark-250kb     # 10,000 PDFs, exactly 250 KB each
+make benchmark-corpus COUNT=100 RUNS=3  # Pinned real-world PDFs
 ```
 
 The targets build Rust, prepare or reuse the datasets, and measure time and peak
@@ -138,6 +155,8 @@ RAM. See [benchmark options](docs/BENCHMARKS.md#make-commands).
 - [Installation, deployment and configuration](docs/INSTALLATION.md)
 - [Laravel example](examples/laravel-app/README.md)
 - [Optional native PHP extension](docs/EXTENSION.md)
+- [Prebuilt executable](docs/BINARIES.md)
+- [Storage disks and streaming](docs/STORAGE.md)
 - [Benchmarks](docs/BENCHMARKS.md)
 
 The merger combines pages and their inherited resources. It does not combine

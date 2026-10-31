@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace SushiDev\PdfConcater;
@@ -37,19 +38,20 @@ final class Merger
     /** @param list<string> $files @return array<string, int|float|string> */
     public function merge(array $files, string $output): array
     {
-        if ($files === [] || !array_is_list($files)) {
+        if ($files === [] || ! array_is_list($files)) {
             throw new InvalidArgumentException('files must be a non-empty list of PDF paths.');
         }
         foreach ($files as $file) {
-            if (!is_string($file)) {
+            if (! is_string($file)) {
                 throw new InvalidArgumentException('Each file path must be a string.');
             }
             self::checkPath($file);
-            if (!is_file($file) || !is_readable($file)) {
+            if (! is_file($file) || ! is_readable($file)) {
                 throw new MergeException("Input file is not readable: {$file}");
             }
         }
         self::prepareOutput($output);
+
         return $this->execute('merge-files', $files, $output);
     }
 
@@ -57,10 +59,11 @@ final class Merger
     public function mergeDirectory(string $directory, string $output): array
     {
         self::checkPath($directory);
-        if (!is_dir($directory) || !is_readable($directory)) {
+        if (! is_dir($directory) || ! is_readable($directory)) {
             throw new MergeException("Input directory is not readable: {$directory}");
         }
         self::prepareOutput($output);
+
         return $this->execute('merge', $directory, $output);
     }
 
@@ -75,10 +78,10 @@ final class Merger
     {
         self::checkPath($output);
         $parent = dirname($output);
-        if (!is_dir($parent) && !@mkdir($parent, 0777, true) && !is_dir($parent)) {
+        if (! is_dir($parent) && ! @mkdir($parent, 0777, true) && ! is_dir($parent)) {
             throw new MergeException("Cannot create output directory: {$parent}");
         }
-        if (!is_writable($parent) || is_dir($output)) {
+        if (! is_writable($parent) || is_dir($output)) {
             throw new MergeException("Output path is not writable: {$output}");
         }
     }
@@ -95,10 +98,10 @@ final class Merger
                     ? \pdf_concater_merge_files($input, $output, $this->threads, $this->batchSize, $engine)
                     : \pdf_concater_merge_dir($input, $output, $this->threads, $this->batchSize, $engine);
             } else {
-                $binary = $this->binary ?? dirname(__DIR__, 2) . '/target/release/pdf-concater';
-                if (!is_file($binary) || !is_executable($binary)) {
-                    throw new MergeException('Rust executable not found: ' . $binary
-                        . '. Run composer build in the package, or vendor/bin/pdf-concater-build in your application.');
+                $binary = $this->binary ?? dirname(__DIR__, 2).'/target/release/pdf-concater';
+                if (! is_file($binary) || ! is_executable($binary)) {
+                    throw new MergeException('Rust executable not found: '.$binary
+                        .'. Run composer build in the package, or vendor/bin/pdf-concater-build in your application.');
                 }
                 $binary = realpath($binary);
                 $arguments = [$binary, $command, '--output', $output,
@@ -116,13 +119,14 @@ final class Merger
         }
         $result['backend'] = $backend;
         $result['elapsed_ms'] = (hrtime(true) - $started) / 1_000_000;
+
         return $result;
     }
 
     /** @param list<string> $arguments @return array<string, int|float|string> */
     private function run(array $arguments, string $input): array
     {
-        if (!function_exists('proc_open')) {
+        if (! function_exists('proc_open')) {
             throw new MergeException('proc_open is unavailable. Enable it or load the pdf_concater extension.');
         }
         // Regular files prevent pipe deadlocks and keep long filename lists out of argv.
@@ -140,7 +144,7 @@ final class Merger
             }
             rewind($streams[0]);
             $process = proc_open($arguments, $streams, $pipes, null, null, ['bypass_shell' => true]);
-            if (!is_resource($process)) {
+            if (! is_resource($process)) {
                 throw new MergeException('Cannot start the Rust executable.');
             }
             $exitCode = proc_close($process);
@@ -149,16 +153,17 @@ final class Merger
             $stdout = stream_get_contents($streams[1], 1_048_576);
             $stderr = stream_get_contents($streams[2], 1_048_576);
             if ($exitCode !== 0) {
-                throw new MergeException('PDF merge failed: ' . trim($stderr ?: 'Rust process exited with code ' . $exitCode));
+                throw new MergeException('PDF merge failed: '.trim($stderr ?: 'Rust process exited with code '.$exitCode));
             }
             try {
                 $result = json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
             } catch (JsonException $error) {
                 throw new MergeException('Rust returned invalid JSON.', 0, $error);
             }
-            if (!is_array($result) || !isset($result['pages'], $result['files'], $result['total_ms'])) {
+            if (! is_array($result) || ! isset($result['pages'], $result['files'], $result['total_ms'])) {
                 throw new MergeException('Rust returned an unexpected result.');
             }
+
             return $result;
         } finally {
             foreach ($streams as $stream) {

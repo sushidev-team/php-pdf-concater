@@ -1,0 +1,73 @@
+name: Real PDF compatibility and benchmarks
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '21 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      count:
+        description: Number of real PDF inputs (pinned sources repeated in order)
+        type: number
+        default: 10000
+      runs:
+        description: Benchmark repetitions
+        type: number
+        default: 3
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pdf-corpus-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  corpus:
+    name: Render equality, PHP backends and external RSS
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install independent PDF validators
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils qpdf libclang-dev time
+      - run: composer install --no-dev --prefer-dist --no-interaction --no-progress
+      - run: cargo build --release --locked -p pdf-concater -p php-pdf-concater
+      - name: Compare all pages through all backends
+        run: >-
+          python3 scripts/pdf-corpus.py test --require-qpdf --php php
+          --extension target/release/libpdf_concater.so
+      - name: Record real-document time and peak RSS
+        env:
+          COUNT: ${{ github.event_name == 'workflow_dispatch' && inputs.count || github.event_name == 'schedule' && '10000' || '100' }}
+          RUNS: ${{ github.event_name == 'workflow_dispatch' && inputs.runs || '3' }}
+        run: python3 scripts/pdf-corpus.py benchmark --count "$COUNT" --runs "$RUNS"
+      - name: Add results to workflow summary
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path('output/corpus/benchmark.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write(f"## Real PDF benchmark\n\nInputs: {report['count']}; unique sources: {report['unique_sources']}.\n\n")
+              summary.write('| Engine | Median wall time (ms) | Max peak RSS (MiB) |\n| --- | ---: | ---: |\n')
+              for row in report['summary']:
+                  summary.write(f"| {row['engine']} | {row['wall_median_ms']:.1f} | {row['peak_rss_max_mib']:.1f} |\n")
+              summary.write('\n' + report['note'] + '\n')
+          PY
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: real-pdf-results
+          path: |
+            output/corpus/*.json
+            output/corpus/CORPUS-LICENSES.md
+          if-no-files-found: error
+          retention-days: 30

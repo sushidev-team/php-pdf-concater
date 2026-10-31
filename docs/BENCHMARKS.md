@@ -32,7 +32,37 @@ individual timings and peak RSS values in `benchmark.json` / `benchmark-php.json
 `make help` lists the available commands. The PHP backend measures the native
 extension, not the Composer process wrapper.
 
-## Generate fixtures
+## Real-document benchmarks
+
+```sh
+make benchmark-corpus COUNT=100 RUNS=3
+make benchmark-corpus COUNT=10000 RUNS=3
+```
+
+The [external corpus](../tests/corpus/README.md) has 13 supported PDFs, including
+a 117-page mathematics document, plus two explicit rejection fixtures. Benchmark
+inputs cycle through the supported source paths; 10,000 inputs are not 10,000
+distinct documents or exactly 250 KB each. Their compressed images and fonts are
+more representative than the synthetic whitespace padding.
+
+Reports in `output/corpus/benchmark.json` include actual file/page/byte counts,
+individual wall times, engine timings, peak RSS, platform and manifest checksum.
+Generation/download/validation are outside the timed process; startup, writes,
+sync and teardown are included. The filesystem cache is not purged. CI runs the
+100-input case on pushes/PRs and the 10,000-input case weekly or manually.
+
+Correctness tests compare all 143 reordered/repeated pages through three engines
+and both PHP backends, including rendered pixels and extracted text. CI adds qpdf
+syntax checks. These checks precede benchmarking and fail independently of timing.
+
+A local single-run measurement on the machine below used 10,000 repeated real
+inputs: 109,204 pages, 2.25 GB input, 2.18 GB output, 2 workers and batch size 2.
+It took **22.48 s process wall time** with **152.92 MiB peak RSS**. The 100-input
+case's median across 3 runs was **247.6 ms**, with **28.6 MiB** maximum peak RSS.
+These real-document measurements show why the synthetic sub-second result is
+not a promise for complex PDFs with many pages and compressed resources.
+
+## Generate synthetic fixtures
 
 ```sh
 cargo build --release --locked -p pdf-concater

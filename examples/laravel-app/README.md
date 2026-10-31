@@ -54,7 +54,8 @@ Build first with `composer build` after a fresh checkout.
 ## Integration points
 
 - The package automatically discovers `PdfConcaterServiceProvider` and binds
-  `SushiDev\PdfConcater\Merger`; the app needs no custom service binding.
+  `SushiDev\PdfConcater\Merger` and `SushiDev\PdfConcater\Laravel\PdfConcater`;
+  the app needs no custom service binding.
 - `SushiDev\PdfConcater\Facades\PdfConcater`: the facade for static-style calls.
 - `app/Console/Commands/MergePdfs.php`: the `pdf:merge` command.
 - `app/Http/Controllers/MergePdfsController.php`: upload-to-download action.
@@ -63,6 +64,8 @@ Build first with `composer build` after a fresh checkout.
 - `config/pdf-concater.php`: executable, thread count, batch size and compression.
 
 A custom executable can be configured through `PDF_CONCATER_BINARY` in `.env`.
+The facade's `mergeFromDisk` method combines disk-relative paths and writes to a
+chosen Storage disk. See [Storage disks and streaming](../../docs/STORAGE.md).
 Generated downloads are removed after sending. The demo is for local use and
 contains no user accounts.
 

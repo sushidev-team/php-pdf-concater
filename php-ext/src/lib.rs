@@ -1,9 +1,8 @@
 use ext_php_rs::{convert::IntoZval, prelude::*, types::Zval};
-use pdf_concater::{Metrics, merge_directory_with_engine, merge_files_with_engine};
+use pdf_concater::{Metrics, boundary, merge_directory_with_engine, merge_files_with_engine};
 use std::{
     collections::HashMap,
     ffi::{CString, c_char, c_int},
-    panic::{AssertUnwindSafe, catch_unwind},
     path::{Path, PathBuf},
 };
 
@@ -65,7 +64,7 @@ pub fn pdf_concater_merge_dir(
         .parse::<pdf_concater::Engine>()
         .map_err(|error| PhpException::from_message(error.to_string()))?;
     // Only owned Rust values enter the worker threads. All Zend interaction stays here.
-    let result = catch_unwind(AssertUnwindSafe(|| {
+    boundary::run(&mut || {
         merge_directory_with_engine(
             Path::new(&directory),
             Path::new(&output),
@@ -73,16 +72,9 @@ pub fn pdf_concater_merge_dir(
             batch_size as usize,
             engine,
         )
-    }));
-    match result {
-        Ok(Ok(metrics)) => metrics_array(metrics),
-        Ok(Err(error)) => Err(PhpException::from_message(format!(
-            "PDF merge failed: {error:#}"
-        ))),
-        Err(_) => Err(PhpException::from_message(
-            "PDF merge aborted due to an internal Rust panic".into(),
-        )),
-    }
+    })
+    .map_err(PhpException::from_message)
+    .and_then(metrics_array)
 }
 
 /// Merge an explicit PHP list of filenames in the supplied order.
@@ -106,7 +98,7 @@ pub fn pdf_concater_merge_files(
         .parse::<pdf_concater::Engine>()
         .map_err(|error| PhpException::from_message(error.to_string()))?;
     let paths: Vec<_> = files.into_iter().map(PathBuf::from).collect();
-    let result = catch_unwind(AssertUnwindSafe(|| {
+    boundary::run(&mut || {
         merge_files_with_engine(
             &paths,
             Path::new(&output),
@@ -114,12 +106,9 @@ pub fn pdf_concater_merge_files(
             batch_size as usize,
             engine,
         )
-    }));
-    match result {
-        Ok(Ok(metrics)) => metrics_array(metrics),
-        Ok(Err(error)) => Err(format!("PDF merge failed: {error:#}").into()),
-        Err(_) => Err("PDF merge aborted due to an internal Rust panic".into()),
-    }
+    })
+    .map_err(PhpException::from_message)
+    .and_then(metrics_array)
 }
 
 #[php_module]

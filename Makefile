@@ -13,7 +13,7 @@ FILE_BYTES ?= 0
 LARGE_DATA_DIR ?= data-250kb
 LARGE_OUTPUT_DIR ?= output/benchmark-250kb
 
-.PHONY: help build extension fixtures benchmark benchmark-250kb benchmark-php test coverage
+.PHONY: help build extension fixtures benchmark benchmark-250kb benchmark-php benchmark-corpus test test-corpus coverage coverage-rust
 
 help:
 	@printf '%s\n' \
@@ -21,7 +21,10 @@ help:
 	  'make benchmark-250kb  Same test with exactly 250,000 bytes per PDF' \
 	  'make benchmark-php    Measure the native PHP extension' \
 	  'make test             Run PHP and Rust tests' \
-	  'make coverage         Run the strict PHP/Laravel coverage gates' \
+	  'make benchmark-corpus Measure pinned real PDFs (override COUNT and RUNS)' \
+	  'make test-corpus      Compare real PDFs through Rust and Composer' \
+	  'make coverage         Run all PHP/Laravel/Rust coverage gates' \
+	  'make coverage-rust    Run Rust/native coverage only (cargo-llvm-cov)' \
 	  'Options: RUNS=5 THREADS="1 8" ENGINE=streaming BACKEND=rust COUNT=10000'
 
 build:
@@ -47,6 +50,17 @@ benchmark-php:
 test:
 	composer test
 	cargo test --release --locked -p pdf-concater
+	$(PYTHON) -m unittest discover -s scripts/tests -v
+
+test-corpus: build
+	$(PYTHON) scripts/pdf-corpus.py test --php php
+
+benchmark-corpus: build
+	$(PYTHON) scripts/pdf-corpus.py benchmark --count "$(COUNT)" --runs "$(RUNS)" --engines "$(ENGINE)"
 
 coverage:
 	composer test:coverage
+	bash scripts/run-rust-coverage.sh
+
+coverage-rust:
+	bash scripts/run-rust-coverage.sh

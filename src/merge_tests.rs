@@ -1,7 +1,7 @@
-use lopdf::{Document, Object};
-use pdf_concater::{
+use crate::{
     Engine, generate, merge_directory, merge_files, merge_files_with_engine, verify, verify_content,
 };
+use lopdf::{Document, Object};
 use std::{fs, path::PathBuf};
 
 #[test]

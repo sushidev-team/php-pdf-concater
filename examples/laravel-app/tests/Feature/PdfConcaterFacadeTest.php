@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Storage;
 use SushiDev\PdfConcater\Facades\PdfConcater;
-use SushiDev\PdfConcater\Merger;
+use SushiDev\PdfConcater\Laravel\PdfConcater as Service;
 use Tests\TestCase;
 
 class PdfConcaterFacadeTest extends TestCase
@@ -25,7 +25,7 @@ class PdfConcaterFacadeTest extends TestCase
             base_path('tests/Fixtures/second.pdf'),
         ], $output);
 
-        $this->assertSame($this->app->make(Merger::class), PdfConcater::getFacadeRoot());
+        $this->assertSame($this->app->make(Service::class), PdfConcater::getFacadeRoot());
         $this->assertSame('process', $result['backend']);
         $this->assertSame(1, $result['threads']);
         $this->assertSame(2, $result['batch_size']);

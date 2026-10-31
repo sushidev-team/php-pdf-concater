@@ -1,0 +1,64 @@
+name: Laravel storage streams
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: storage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  s3:
+    name: Real Laravel S3 adapter and transfer benchmarks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: dom, fileinfo, mbstring, pdo_sqlite, xml, xmlwriter
+          coverage: none
+          tools: composer:v2
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sudo apt-get update && sudo apt-get install -y libclang-dev
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: cargo build --release --locked -p pdf-concater -p php-pdf-concater
+      - name: Install pinned HTTP S3 emulator
+        run: |
+          python3 -m venv tmp/storage-python
+          tmp/storage-python/bin/python -m pip install -r tests/storage/requirements.txt
+      - run: python3 scripts/pdf-corpus.py fetch
+      - name: Compare local, S3 and cross-disk output through both PHP backends
+        run: >-
+          tmp/storage-python/bin/python scripts/run-storage-tests.py
+          --extension target/release/libpdf_concater.so --count 100 --corpus
+      - name: Add transfer costs to workflow summary
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## Laravel storage streams\n\nLocal HTTP S3 emulator; 100 repeated real PDF inputs.\n\n')
+              summary.write('| Backend | Source → target | Total ms | Input I/O ms | Merge ms | Output I/O ms |\n| --- | --- | ---: | ---: | ---: | ---: |\n')
+              for file in sorted(Path('output/storage').glob('benchmark-*.json')):
+                  report = json.loads(file.read_text())
+                  for row in report['results']:
+                      summary.write(f"| {report['backend']} | {row['source']} → {row['destination']} | {row['elapsed_ms']:.1f} | {row['input_io_ms']:.1f} | {row['merge_elapsed_ms']:.1f} | {row['output_io_ms']:.1f} |\n")
+              summary.write('\nPHP heap measurements in JSON exclude Rust/native allocations. Local HTTP does not model WAN latency.\n')
+          PY
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: storage-stream-results
+          path: output/storage/*.json
+          if-no-files-found: error
+          retention-days: 30
